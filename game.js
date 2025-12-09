@@ -8,11 +8,14 @@ const gameOverScreen = document.getElementById('gameOver');
 const currentScoreElement = document.getElementById('current-score');
 const highScoreElement = document.getElementById('high-score');
 const finalScoreElement = document.getElementById('final-score');
+const finalCoinsElement = document.getElementById('final-coins');
 const currentSpeedElement = document.getElementById('current-speed');
+const currentCoinsElement = document.getElementById('current-coins');
 
 // 游戏状态
 let gameState = 'ready'; // ready, playing, gameOver
 let score = 0;
+let coins = 0;
 let highScore = localStorage.getItem('dinoHighScore') || 0;
 let frames = 0;
 
@@ -30,6 +33,21 @@ let isTransitioning = false;
 let transitionFrameCounter = 0;
 let transitionDirection = 1; // 1 for night, -1 for day
 let currentSpeed = 1.0; // 当前游戏速度倍数
+
+// 金币系统配置
+const COIN_GENERATION_INTERVAL = 150; // 金币生成间隔（帧数）
+const COIN_BASE_SPEED = 3; // 金币基础速度（比障碍物稍慢）
+const COIN_SCORE_VALUE = 5; // 每收集一个金币获得的分数
+const COIN_RADIUS = 6; // 金币半径
+const COIN_Y_POSITIONS = { // 金币可能出现的位置
+    ground: canvas.height - 50 - COIN_RADIUS * 2, // 地面附近
+    elevated: canvas.height - 50 - COIN_RADIUS * 2 - 40 // 适中高度，需要跳跃收集
+};
+const MAX_COINS = 10; // 同时存在的最大金币数量
+const MAX_COLLECTION_ANIMATION_FRAMES = 30; // 收集动画的最大帧数
+
+// 金币数组
+let coinsArray = [];
 
 // 云朵配置
 const CLOUD_LAYERS = 3; // 云朵层数（前景、中景、远景）
@@ -145,6 +163,98 @@ class Obstacle {
         // 添加像素风格细节
         ctx.fillStyle = isNightMode ? '#ccc' : '#333';
         ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+    }
+}
+
+// 金币类
+class Coin {
+    constructor() {
+        this.radius = COIN_RADIUS;
+        this.x = canvas.width + this.radius; // 从屏幕右侧出现
+        this.y = this.getRandomYPosition(); // 随机选择出现位置
+        this.baseSpeed = COIN_BASE_SPEED; // 基础速度
+        this.collected = false; // 是否已被收集
+        this.alpha = 1; // 透明度，用于收集时的淡出效果
+        this.scale = 1; // 缩放，用于收集时的视觉反馈
+        this.collectionAnimationFrames = 0; // 收集动画帧计数器
+    }
+
+    // 获取随机的Y轴位置
+    getRandomYPosition() {
+        // 随机选择地面附近或适中高度位置
+        return Math.random() < 0.5 ? COIN_Y_POSITIONS.ground : COIN_Y_POSITIONS.elevated;
+    }
+
+    // 更新金币状态
+    update() {
+        // 如果已被收集，则执行收集动画并返回
+        if (this.collected) {
+            this.handleCollectionAnimation();
+            return;
+        }
+
+        // 根据当前游戏速度调整金币移动速度
+        this.x -= this.baseSpeed * currentSpeed;
+    }
+
+    // 处理收集动画效果
+    handleCollectionAnimation() {
+        // 增加动画帧计数器
+        this.collectionAnimationFrames++;
+
+        // 增大缩放比例
+        this.scale += 0.1;
+
+        // 降低透明度
+        this.alpha -= 0.05;
+
+        // 确保 alpha 值不会低于 0
+        this.alpha = Math.max(0, this.alpha);
+    }
+
+    // 绘制金币
+    draw() {
+        // 如果已被收集，且透明度为0，则不绘制
+        if (this.collected && this.alpha <= 0) {
+            return;
+        }
+
+        // 保存当前绘图状态
+        ctx.save();
+
+        // 设置透明度
+        ctx.globalAlpha = this.alpha;
+
+        // 设置缩放变换
+        ctx.translate(this.x, this.y);
+        ctx.scale(this.scale, this.scale);
+        ctx.translate(-this.x, -this.y);
+
+        // 绘制金币主体 - 使用简单的颜色，移除复杂的渐变和发光效果
+        if (isNightMode) {
+            // 夜间模式下金币颜色
+            ctx.fillStyle = '#D4AF37';
+        } else {
+            // 白天模式下金币颜色
+            ctx.fillStyle = '#FFD700';
+        }
+
+        ctx.beginPath();
+        ctx.arc(this.x + this.radius, this.y + this.radius, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 绘制金币边缘 - 增加简单的立体感
+        if (isNightMode) {
+            ctx.strokeStyle = '#8B6914';
+        } else {
+            ctx.strokeStyle = '#DAA520';
+        }
+
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // 恢复绘图状态
+        ctx.restore();
     }
 }
 
@@ -449,6 +559,87 @@ function updateObstacles() {
     }
 }
 
+// 更新金币
+function updateCoins() {
+    // 生成金币（随机间隔，增加游戏趣味性）
+    const generationChance = 1 / COIN_GENERATION_INTERVAL; // 生成概率
+    if (Math.random() < generationChance && coinsArray.length < MAX_COINS) {
+        coinsArray.push(new Coin());
+    }
+
+    // 更新和绘制金币
+    for (let i = coinsArray.length - 1; i >= 0; i--) {
+        const coin = coinsArray[i];
+
+        coin.update();
+        coin.draw();
+
+        // 检查是否需要移除金币
+        if (
+            // 超出屏幕且未被收集
+            (coin.x + coin.radius * 2 < 0 && !coin.collected) ||
+            // 已被收集且透明度足够低
+            (coin.collected && coin.alpha <= 0.001) ||
+            // 已被收集且动画帧数达到最大值
+            (coin.collected && coin.collectionAnimationFrames >= MAX_COLLECTION_ANIMATION_FRAMES)
+        ) {
+            coinsArray.splice(i, 1);
+        }
+    }
+
+    // 定期清理金币数组，移除可能由于异常情况而没有被自动移除的金币
+    if (frames % 300 === 0) { // 每300帧清理一次（约5秒）
+        coinsArray = coinsArray.filter(coin => {
+            // 保留未收集且在屏幕内的金币
+            if (!coin.collected && coin.x + coin.radius * 2 >= 0) {
+                return true;
+            }
+
+            // 保留已收集但动画尚未完成的金币
+            if (coin.collected && coin.collectionAnimationFrames < MAX_COLLECTION_ANIMATION_FRAMES) {
+                return true;
+            }
+
+            // 移除其他所有金币
+            return false;
+        });
+    }
+}
+
+// 检查金币碰撞
+function checkCoinCollision() {
+    for (let i = coinsArray.length - 1; i >= 0; i--) {
+        const coin = coinsArray[i];
+
+        // 如果金币已被收集，则跳过
+        if (coin.collected) {
+            continue;
+        }
+
+        // 检查恐龙与金币是否碰撞
+        if (
+            dino.x < coin.x + coin.radius * 2 &&
+            dino.x + dino.width > coin.x &&
+            dino.y < coin.y + coin.radius * 2 &&
+            dino.y + dino.height > coin.y
+        ) {
+            // 标记金币为已收集
+            coin.collected = true;
+
+            // 更新金币数量和分数
+            coins++;
+            score += COIN_SCORE_VALUE;
+
+            // 更新UI显示
+            currentCoinsElement.textContent = coins;
+            currentScoreElement.textContent = score;
+
+            // 这里可以添加收集提示音（可选）
+            // playCoinCollectionSound();
+        }
+    }
+}
+
 // 碰撞检测
 function checkCollision() {
     for (let obstacle of obstacles) {
@@ -478,6 +669,7 @@ function endGame() {
 
     // 显示游戏结束界面
     finalScoreElement.textContent = score;
+    finalCoinsElement.textContent = coins; // 显示最终金币数量
 
     // 如果创造了新纪录，显示特殊提示
     const gameOverMessage = document.querySelector('#gameOver h2');
@@ -496,9 +688,11 @@ function endGame() {
 function resetGame() {
     gameState = 'ready';
     score = 0;
+    coins = 0; // 重置金币数量
     frames = 0;
     currentSpeed = 1.0; // 重置游戏速度
     obstacles.length = 0; // 清空障碍物数组
+    coinsArray.length = 0; // 清空金币数组
 
     // 重置恐龙位置
     dino.x = 50;
@@ -514,6 +708,7 @@ function resetGame() {
 
     // 重置界面
     currentScoreElement.textContent = score;
+    currentCoinsElement.textContent = coins; // 重置金币显示
     currentSpeedElement.textContent = currentSpeed.toFixed(1); // 重置速度显示
     gameOverScreen.classList.add('hidden');
 }
@@ -548,10 +743,16 @@ function gameLoop() {
         // 更新和绘制障碍物
         updateObstacles();
 
-        // 检查碰撞
+        // 更新和绘制金币
+        updateCoins();
+
+        // 检查障碍物碰撞
         if (checkCollision()) {
             endGame();
         }
+
+        // 检查金币碰撞
+        checkCoinCollision();
 
         // 定期增加游戏速度
         if (frames % SPEED_INTERVAL === 0 && currentSpeed < MAX_SPEED / 4) {
