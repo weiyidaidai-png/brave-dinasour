@@ -37,7 +37,7 @@ body {
     transition: background-color 0.5s ease;
 }
 
-.score, .high-score, .speed, .mode {
+.score, .high-score, .speed, .mode, .coins {
     font-size: 18px;
     font-weight: bold;
     color: #333;
@@ -51,6 +51,11 @@ body {
 
 #current-speed {
     color: #3498db;
+    transition: color 0.5s ease;
+}
+
+#current-coins {
+    color: #f39c12;
     transition: color 0.5s ease;
 }
 
@@ -85,6 +90,73 @@ body {
 
 #startButton:active, #restartButton:active {
     transform: translateY(1px);
+}
+
+/* 皮肤选择器样式 */
+.skin-selector {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    transition: background-color 0.5s ease;
+}
+
+.skin-selector h3 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 16px;
+    transition: color 0.5s ease;
+}
+
+.skin-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
+
+.skin-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 80px;
+}
+
+.skin-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #3498db;
+}
+
+.skin-option.active {
+    border-color: #2ecc71;
+    background-color: #f0fff4;
+}
+
+.skin-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.skin-option span {
+    color: #333;
+    font-size: 12px;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.skin-option:hover span {
+    color: #3498db;
 }
 
 .instructions {
@@ -163,6 +235,43 @@ body.night-mode #gameCanvas {
 
 body.night-mode .instructions {
     color: #8b949e; /* 夜晚说明文本颜色 */
+}
+
+/* 夜间模式下的皮肤选择器样式 */
+body.night-mode .skin-selector {
+    background-color: #21262d; /* 夜晚皮肤选择器背景 */
+}
+
+body.night-mode .skin-selector h3 {
+    color: #e6edf3; /* 夜晚皮肤选择器标题颜色 */
+}
+
+body.night-mode .skin-option {
+    background-color: #161b22; /* 夜晚皮肤选项背景 */
+    border-color: #30363d; /* 夜晚皮肤选项边框 */
+}
+
+body.night-mode .skin-option:hover {
+    border-color: #58a6ff; /* 夜晚皮肤选项悬停边框 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+body.night-mode .skin-option.active {
+    border-color: #3fb950; /* 夜晚皮肤选项激活边框 */
+    background-color: #0d1117; /* 夜晚皮肤选项激活背景 */
+}
+
+body.night-mode .skin-preview {
+    border-color: #6e7681; /* 夜晚皮肤预览边框 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+body.night-mode .skin-option span {
+    color: #e6edf3; /* 夜晚皮肤选项文本颜色 */
+}
+
+body.night-mode .skin-option:hover span {
+    color: #58a6ff; /* 夜晚皮肤选项悬停文本颜色 */
 }
 
 body.night-mode .game-over {
