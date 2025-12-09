@@ -17,6 +17,38 @@
         <canvas id="gameCanvas" width="800" height="200"></canvas>
         <div class="game-controls">
             <button id="startButton">开始游戏</button>
+
+            <!-- 皮肤选择区域 -->
+            <div class="skin-selector">
+                <h3>选择恐龙皮肤</h3>
+                <div class="skin-options" id="skinOptions">
+                    <div class="skin-option active" data-skin="default" title="默认皮肤">
+                        <div class="skin-preview" style="background-color: #000;"></div>
+                        <span>默认</span>
+                    </div>
+                    <div class="skin-option" data-skin="green" title="绿色皮肤">
+                        <div class="skin-preview" style="background-color: #2ecc71;"></div>
+                        <span>绿色</span>
+                    </div>
+                    <div class="skin-option" data-skin="blue" title="蓝色皮肤">
+                        <div class="skin-preview" style="background-color: #3498db;"></div>
+                        <span>蓝色</span>
+                    </div>
+                    <div class="skin-option" data-skin="red" title="红色皮肤">
+                        <div class="skin-preview" style="background-color: #e74c3c;"></div>
+                        <span>红色</span>
+                    </div>
+                    <div class="skin-option" data-skin="yellow" title="黄色皮肤（带皇冠）">
+                        <div class="skin-preview" style="background-color: #f1c40f;"></div>
+                        <span>黄色</span>
+                    </div>
+                    <div class="skin-option" data-skin="purple" title="紫色皮肤（带角）">
+                        <div class="skin-preview" style="background-color: #9b59b6;"></div>
+                        <span>紫色</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="instructions">
                 <p>游戏说明：</p>
                 <p>1. 使用空格键或点击屏幕让恐龙跳跃</p>

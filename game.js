@@ -125,6 +125,19 @@ function updateDayNightCycle() {
 // 设置初始高分
 highScoreElement.textContent = highScore;
 
+// 恐龙皮肤配置
+const DINO_SKINS = {
+    default: { name: '默认', bodyColor: '#000', eyeColor: '#fff', pupilColor: '#000', hasDecoration: false },
+    green: { name: '绿色', bodyColor: '#2ecc71', eyeColor: '#fff', pupilColor: '#000', hasDecoration: false },
+    blue: { name: '蓝色', bodyColor: '#3498db', eyeColor: '#fff', pupilColor: '#000', hasDecoration: false },
+    red: { name: '红色', bodyColor: '#e74c3c', eyeColor: '#fff', pupilColor: '#000', hasDecoration: false },
+    yellow: { name: '黄色', bodyColor: '#f1c40f', eyeColor: '#333', pupilColor: '#000', hasDecoration: true, decorationColor: '#f39c12' },
+    purple: { name: '紫色', bodyColor: '#9b59b6', eyeColor: '#fff', pupilColor: '#000', hasDecoration: true, decorationColor: '#8e44ad' }
+};
+
+// 当前选中的皮肤
+let currentSkin = 'default';
+
 // 恐龙对象
 const dino = {
     x: 50,
@@ -501,16 +514,57 @@ function drawMountains() {
     }
 }
 
+// 调整颜色亮度（用于昼夜模式）
+function adjustColorBrightness(color, brightnessFactor) {
+    // 解析RGB颜色
+    const r = parseInt(color.substring(1, 3), 16);
+    const g = parseInt(color.substring(3, 5), 16);
+    const b = parseInt(color.substring(5, 7), 16);
+
+    // 调整亮度
+    const adjustedR = Math.min(255, Math.max(0, r * brightnessFactor));
+    const adjustedG = Math.min(255, Math.max(0, g * brightnessFactor));
+    const adjustedB = Math.min(255, Math.max(0, b * brightnessFactor));
+
+    // 转换回十六进制颜色
+    return `#${Math.floor(adjustedR).toString(16).padStart(2, '0')}${Math.floor(adjustedG).toString(16).padStart(2, '0')}${Math.floor(adjustedB).toString(16).padStart(2, '0')}`;
+}
+
 // 绘制恐龙
 function drawDino() {
-    // 根据当前模式设置恐龙颜色
-    ctx.fillStyle = isNightMode ? '#f0f0f0' : '#000';
+    const skin = DINO_SKINS[currentSkin];
+    const brightnessFactor = isNightMode ? 0.8 : 1.0; // 夜间模式降低亮度
+
+    // 调整皮肤颜色亮度
+    const adjustedBodyColor = adjustColorBrightness(skin.bodyColor, brightnessFactor);
+    const adjustedEyeColor = adjustColorBrightness(skin.eyeColor, brightnessFactor);
+    const adjustedPupilColor = adjustColorBrightness(skin.pupilColor, brightnessFactor);
+    const adjustedDecorationColor = skin.hasDecoration ? adjustColorBrightness(skin.decorationColor, brightnessFactor) : null;
+
+    // 绘制恐龙身体
+    ctx.fillStyle = adjustedBodyColor;
     ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
 
+    // 绘制装饰（如果有）
+    if (skin.hasDecoration) {
+        ctx.fillStyle = adjustedDecorationColor;
+        // 为黄色皮肤绘制皇冠，为紫色皮肤绘制角
+        if (currentSkin === 'yellow') {
+            // 绘制皇冠
+            ctx.fillRect(dino.x + 2, dino.y - 3, 3, 3);
+            ctx.fillRect(dino.x + 7, dino.y - 4, 3, 4);
+            ctx.fillRect(dino.x + 12, dino.y - 3, 3, 3);
+        } else if (currentSkin === 'purple') {
+            // 绘制角
+            ctx.fillRect(dino.x + 4, dino.y - 5, 2, 5);
+            ctx.fillRect(dino.x + 12, dino.y - 5, 2, 5);
+        }
+    }
+
     // 添加像素风格的眼睛
-    ctx.fillStyle = isNightMode ? '#333' : '#fff';
+    ctx.fillStyle = adjustedEyeColor;
     ctx.fillRect(dino.x + 12, dino.y + 5, 4, 4);
-    ctx.fillStyle = isNightMode ? '#f0f0f0' : '#000';
+    ctx.fillStyle = adjustedPupilColor;
     ctx.fillRect(dino.x + 14, dino.y + 7, 2, 2);
 }
 
@@ -827,11 +881,42 @@ canvas.addEventListener('touchstart', (e) => {
     }
 });
 
+// 皮肤选择事件监听器
+function initSkinSelector() {
+    const skinOptions = document.querySelectorAll('.skin-option');
+
+    skinOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            // 获取选择的皮肤
+            const selectedSkin = option.dataset.skin;
+
+            // 更新当前皮肤
+            currentSkin = selectedSkin;
+
+            // 更新UI - 移除所有选中状态，为当前选中项添加选中状态
+            skinOptions.forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+
+            // 如果游戏处于准备状态，立即重绘恐龙以显示新皮肤
+            if (gameState === 'ready') {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawGround();
+                drawMountains();
+                drawClouds();
+                drawDino();
+            }
+        });
+    });
+}
+
 // 初始化云朵
 initClouds();
 
 // 初始化山脉
 initMountains();
+
+// 初始化皮肤选择器
+initSkinSelector();
 
 // 启动游戏循环
 gameLoop();
