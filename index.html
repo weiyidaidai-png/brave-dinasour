@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>恐龙跑酷游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header"><div class="mode">模式: <span id="current-mode">Day Mode</span></div>
+            <div class="score">分数: <span id="current-score">0</span></div>
+            <div class="high-score">最高分: <span id="high-score">0</span></div>
+            <div class="speed">速度: <span id="current-speed">1.0</span>x</div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="200"></canvas>
+        <div class="game-controls">
+            <button id="startButton">开始游戏</button>
+            <div class="instructions">
+                <p>游戏说明：</p>
+                <p>1. 使用空格键或点击屏幕让恐龙跳跃</p>
+                <p>2. 避开路上的仙人掌障碍物</p>
+                <p>3. 跑得越远，分数越高</p>
+                <p>4. 游戏会记录你的最高分数</p>
+            </div>
+        </div>
+        <div id="gameOver" class="game-over hidden">
+            <h2>游戏结束</h2>
+            <p>最终分数: <span id="final-score">0</span></p>
+            <button id="restartButton">重新开始</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
