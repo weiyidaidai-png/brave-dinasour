@@ -37,7 +37,7 @@ body {
     transition: background-color 0.5s ease;
 }
 
-.score, .high-score, .speed, .mode {
+.score, .high-score, .speed, .mode, .coins {
     font-size: 18px;
     font-weight: bold;
     color: #333;
@@ -51,6 +51,11 @@ body {
 
 #current-speed {
     color: #3498db;
+    transition: color 0.5s ease;
+}
+
+#current-coins {
+    color: #f39c12;
     transition: color 0.5s ease;
 }
 
